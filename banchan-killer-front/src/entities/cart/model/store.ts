@@ -61,6 +61,8 @@ export const useCartStore = create<CartState>()((set, get) => ({
   loading: false,
 
   fetchCart: async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
     set({ loading: true });
     try {
       const { data } = await apiClient.get('/cart');
