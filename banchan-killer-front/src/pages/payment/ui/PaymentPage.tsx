@@ -25,8 +25,7 @@ export const PaymentPage = () => {
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const widgetsRef = useRef<any>(null);
-  const widgetRendered = useRef(false);
+  const tossRef = useRef<any>(null);
 
   // 결제 페이지 진입 시 장바구니 선택 해제
   useEffect(() => {
@@ -48,61 +47,51 @@ export const PaymentPage = () => {
     })();
   }, [orderId]);
 
-  // 토스 위젯 초기화 + 렌더링
+  // 토스 SDK 초기화
   useEffect(() => {
-    if (!order || widgetRendered.current) return;
-
+    if (!order) return;
     void (async () => {
       try {
         const tossPayments = await loadTossPayments(CLIENT_KEY);
-        const customerKey = `customer_${user?.id || 'anonymous'}`;
-        const widgets = tossPayments.widgets({ customerKey });
-        widgetsRef.current = widgets;
-
-        await widgets.setAmount({ currency: 'KRW', value: order.totalAmount });
-
-        await Promise.all([
-          widgets.renderPaymentMethods({
-            selector: '#payment-method',
-            variantKey: 'DEFAULT',
-          }),
-          widgets.renderAgreement({
-            selector: '#payment-agreement',
-            variantKey: 'AGREEMENT',
-          }),
-        ]);
-
-        widgetRendered.current = true;
+        tossRef.current = tossPayments;
       } catch (e) {
-        console.error('토스 위젯 초기화 실패:', e);
-        setError('결제 위젯을 불러올 수 없습니다.');
+        console.error('토스 SDK 초기화 실패:', e);
+        setError('결제 모듈을 불러올 수 없습니다.');
       }
     })();
-  }, [order, user]);
+  }, [order]);
 
-  // 결제 요청
+  // 결제 요청 (API 개별 연동 방식)
   const handlePayment = async () => {
-    if (!widgetsRef.current || !order) return;
+    if (!tossRef.current || !order) return;
     setPaying(true);
     setError('');
 
     try {
-      // 주문명 생성
       const firstItem = order.items[0]?.productName || '상품';
       const orderName = order.items.length > 1
         ? `${firstItem} 외 ${order.items.length - 1}건`
         : firstItem;
 
-      await widgetsRef.current.requestPayment({
+      const payment = tossRef.current.payment({ customerKey: `customer_${user?.id || 'anon'}` });
+
+      await payment.requestPayment({
+        method: 'CARD',
+        amount: { currency: 'KRW', value: order.totalAmount },
         orderId: order.orderNumber,
         orderName,
         successUrl: `${window.location.origin}/payment/success`,
         failUrl: `${window.location.origin}/payment/fail`,
         customerEmail: user?.email,
         customerName: order.ordererName,
+        card: {
+          useEscrow: false,
+          flowMode: 'DEFAULT',
+          useCardPoint: false,
+          useAppCardOnly: false,
+        },
       });
     } catch (e: any) {
-      // 사용자가 결제창을 닫은 경우
       if (e.code === 'USER_CANCEL') {
         setError('');
       } else {
@@ -148,23 +137,30 @@ export const PaymentPage = () => {
                   </div>
                 ))}
               </div>
+              <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between">
+                <span className="font-bold text-slate-900">총 결제 금액</span>
+                <span className="text-xl font-bold text-blue-600">{order.totalAmount.toLocaleString()}원</span>
+              </div>
             </section>
 
-            {/* 토스 결제 수단 위젯 */}
-            <div id="payment-method" />
-
-            {/* 토스 약관 동의 위젯 */}
-            <div id="payment-agreement" />
+            {/* 결제 수단 안내 */}
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900">결제 수단</h2>
+              <p className="mt-2 text-sm text-slate-500">결제하기 버튼을 누르면 토스페이먼츠 결제창이 열립니다.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {['신용/체크카드', '계좌이체', '토스페이', '카카오페이', '네이버페이'].map((m) => (
+                  <span key={m} className="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-medium text-slate-600">{m}</span>
+                ))}
+              </div>
+            </section>
 
             {/* 에러 메시지 */}
-            {error && (
-              <p className="text-center text-sm text-red-500">{error}</p>
-            )}
+            {error && <p className="text-center text-sm text-red-500">{error}</p>}
 
             {/* 결제 버튼 */}
             <button
               onClick={handlePayment}
-              disabled={paying || !widgetsRef.current}
+              disabled={paying || !tossRef.current}
               className="w-full rounded-2xl bg-blue-600 py-4 text-base font-bold text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
             >
               {paying ? '결제 처리 중...' : `${order.totalAmount.toLocaleString()}원 결제하기`}
