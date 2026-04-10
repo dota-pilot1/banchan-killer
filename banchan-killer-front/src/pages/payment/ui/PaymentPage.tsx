@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import { Header } from '@/widgets/header/ui/Header';
@@ -18,18 +18,18 @@ type OrderSummary = {
 
 export const PaymentPage = () => {
   const { isAuthenticated, user } = useUserStore();
-  const clearSelection = useCartStore((state) => state.clearSelection);
+  const clearCart = useCartStore((state) => state.clearCart);
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tossRef = useRef<any>(null);
+  const [toss, setToss] = useState<any>(null);
 
   // 결제 페이지 진입 시 장바구니 선택 해제
   useEffect(() => {
-    clearSelection();
+    clearCart();
   }, []);
 
   // 주문 정보 로드
@@ -53,7 +53,7 @@ export const PaymentPage = () => {
     void (async () => {
       try {
         const tossPayments = await loadTossPayments(CLIENT_KEY);
-        tossRef.current = tossPayments;
+        setToss(tossPayments);
       } catch (e) {
         console.error('토스 SDK 초기화 실패:', e);
         setError('결제 모듈을 불러올 수 없습니다.');
@@ -63,7 +63,7 @@ export const PaymentPage = () => {
 
   // 결제 요청 (API 개별 연동 방식)
   const handlePayment = async () => {
-    if (!tossRef.current || !order) return;
+    if (!toss || !order) return;
     setPaying(true);
     setError('');
 
@@ -73,7 +73,7 @@ export const PaymentPage = () => {
         ? `${firstItem} 외 ${order.items.length - 1}건`
         : firstItem;
 
-      const payment = tossRef.current.payment({ customerKey: `customer_${user?.id || 'anon'}` });
+      const payment = toss.payment({ customerKey: `customer_${user?.id || 'anon'}` });
 
       await payment.requestPayment({
         method: 'CARD',
@@ -160,7 +160,7 @@ export const PaymentPage = () => {
             {/* 결제 버튼 */}
             <button
               onClick={handlePayment}
-              disabled={paying || !tossRef.current}
+              disabled={paying || !toss}
               className="w-full rounded-2xl bg-blue-600 py-4 text-base font-bold text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
             >
               {paying ? '결제 처리 중...' : `${order.totalAmount.toLocaleString()}원 결제하기`}
