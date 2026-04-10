@@ -66,7 +66,7 @@ export const Header = () => {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              {isAuthenticated && (
+              {user?.role === 'ADMIN' && (
                 <Link
                   to="/admin/products"
                   className="inline-flex h-9 items-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"

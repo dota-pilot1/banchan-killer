@@ -1,0 +1,24 @@
+erDiagram
+    products {
+        bigint id PK "Primary Key"
+        varchar name "상품명 (100)"
+        text description "상품 설명"
+        integer price "판매가"
+        integer stock_quantity "재고 수량"
+        varchar category "카테고리 (SIDE_DISH, SOUP_STEW, MAIN_COURSE, KIMCHI, SEASONAL)"
+        varchar image_url "대표 이미지 URL (255)"
+        varchar status "상품 상태 (SALE, SOLDOUT, HIDDEN)"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    users {
+        bigint id PK "Primary Key"
+        varchar email "이메일 (100, Unique)"
+        varchar password "비밀번호"
+        varchar nickname "닉네임 (50)"
+        varchar role "권한 (USER, ADMIN)"
+        boolean enabled "계정 활성화 여부"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
