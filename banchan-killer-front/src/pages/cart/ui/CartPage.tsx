@@ -1,14 +1,20 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/entities/cart/model/store';
 import { PRODUCT_CATEGORY_LABELS } from '@/entities/product/model/types';
 
 export const CartPage = () => {
+  const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
+  const selectedProductIds = useCartStore((state) => state.selectedProductIds);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const totalPrice = useCartStore((state) => state.getTotalPrice());
+  const toggleSelect = useCartStore((state) => state.toggleSelect);
+  const toggleSelectAll = useCartStore((state) => state.toggleSelectAll);
+  const selectedTotalPrice = useCartStore((state) => state.getSelectedTotalPrice());
+
+  const isAllSelected = items.length > 0 && selectedProductIds.length === items.length;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -34,16 +40,37 @@ export const CartPage = () => {
         ) : (
           <div className="grid gap-8 lg:grid-cols-[1.4fr_0.6fr]">
             <section className="space-y-4">
+              <div className="flex items-center justify-between rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  전체 선택
+                </label>
+                <span className="text-sm text-slate-500">선택 {selectedProductIds.length}건</span>
+              </div>
+
               {items.map((item) => (
                 <article
                   key={item.productId}
                   className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row"
                 >
-                  <img
-                    src={item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'}
-                    alt={item.name}
-                    className="h-36 w-full rounded-2xl object-cover sm:w-40"
-                  />
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedProductIds.includes(item.productId)}
+                      onChange={() => toggleSelect(item.productId)}
+                      className="mt-2 h-4 w-4 rounded border-slate-300"
+                    />
+                    <img
+                      src={item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'}
+                      alt={item.name}
+                      className="h-36 w-full rounded-2xl object-cover sm:w-40"
+                    />
+                  </div>
 
                   <div className="flex flex-1 flex-col justify-between gap-4">
                     <div className="space-y-2">
@@ -98,23 +125,29 @@ export const CartPage = () => {
               <div className="mt-6 space-y-4 text-sm text-slate-600">
                 <div className="flex items-center justify-between">
                   <span>상품 금액</span>
-                  <span className="font-semibold text-slate-900">{totalPrice.toLocaleString()}원</span>
+                  <span className="font-semibold text-slate-900">{selectedTotalPrice.toLocaleString()}원</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>배송비</span>
-                  <span className="font-semibold text-slate-900">추후 계산</span>
+                  <span className="font-semibold text-slate-900">{selectedTotalPrice >= 40000 ? '무료' : '3,000원'}</span>
                 </div>
               </div>
 
               <div className="mt-6 border-t border-slate-200 pt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold text-slate-700">합계</span>
-                  <span className="text-2xl font-extrabold text-slate-900">{totalPrice.toLocaleString()}원</span>
+                  <span className="text-2xl font-extrabold text-slate-900">
+                    {(selectedTotalPrice + (selectedTotalPrice >= 40000 || selectedTotalPrice === 0 ? 0 : 3000)).toLocaleString()}원
+                  </span>
                 </div>
               </div>
 
-              <Button className="mt-6 h-12 w-full text-base font-semibold" disabled>
-                주문 기능은 다음 단계에서 연결
+              <Button
+                className="mt-6 h-12 w-full text-base font-semibold"
+                disabled={selectedProductIds.length === 0}
+                onClick={() => navigate('/order')}
+              >
+                선택 상품 주문하기
               </Button>
             </aside>
           </div>

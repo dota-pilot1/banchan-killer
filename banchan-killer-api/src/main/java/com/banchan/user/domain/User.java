@@ -16,6 +16,12 @@ public class User extends BaseEntity {
     @Column(length = 50)
     private String nickname;
 
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 500)
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.USER;
@@ -45,6 +51,22 @@ public class User extends BaseEntity {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     public UserRole getRole() {

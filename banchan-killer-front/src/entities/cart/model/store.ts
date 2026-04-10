@@ -14,18 +14,25 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  selectedProductIds: number[];
   addItem: (product: Product) => void;
   removeItem: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
+  toggleSelect: (productId: number) => void;
+  toggleSelectAll: () => void;
+  getSelectedItems: () => CartItem[];
+  clearSelection: () => void;
   clearCart: () => void;
   getTotalCount: () => number;
   getTotalPrice: () => number;
+  getSelectedTotalPrice: () => number;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      selectedProductIds: [],
       addItem: (product) => {
         set((state) => {
           const existingItem = state.items.find((item) => item.productId === product.id);
@@ -53,12 +60,16 @@ export const useCartStore = create<CartState>()(
                 quantity: 1,
               },
             ],
+            selectedProductIds: state.selectedProductIds.includes(product.id)
+              ? state.selectedProductIds
+              : [...state.selectedProductIds, product.id],
           };
         });
       },
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter((item) => item.productId !== productId),
+          selectedProductIds: state.selectedProductIds.filter((id) => id !== productId),
         }));
       },
       updateQuantity: (productId, quantity) => {
@@ -73,11 +84,31 @@ export const useCartStore = create<CartState>()(
           ),
         }));
       },
-      clearCart: () => set({ items: [] }),
+      toggleSelect: (productId) =>
+        set((state) => ({
+          selectedProductIds: state.selectedProductIds.includes(productId)
+            ? state.selectedProductIds.filter((id) => id !== productId)
+            : [...state.selectedProductIds, productId],
+        })),
+      toggleSelectAll: () =>
+        set((state) => ({
+          selectedProductIds:
+            state.selectedProductIds.length === state.items.length
+              ? []
+              : state.items.map((item) => item.productId),
+        })),
+      getSelectedItems: () =>
+        get().items.filter((item) => get().selectedProductIds.includes(item.productId)),
+      clearSelection: () => set({ selectedProductIds: [] }),
+      clearCart: () => set({ items: [], selectedProductIds: [] }),
       getTotalCount: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
       getTotalPrice: () =>
         get().items.reduce((total, item) => total + item.price * item.quantity, 0),
+      getSelectedTotalPrice: () =>
+        get()
+          .items.filter((item) => get().selectedProductIds.includes(item.productId))
+          .reduce((total, item) => total + item.price * item.quantity, 0),
     }),
     {
       name: 'cart-storage',

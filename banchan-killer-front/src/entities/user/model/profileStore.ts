@@ -1,13 +1,14 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-interface DeliveryAddress {
+export interface DeliveryAddress {
+  id?: number;
   recipientName: string;
   recipientPhone: string;
   zipCode: string;
   address1: string;
   address2: string;
   deliveryRequest: string;
+  isDefault?: boolean;
 }
 
 interface ProfileState {
@@ -16,12 +17,14 @@ interface ProfileState {
   email: string;
   phone: string;
   defaultAddress: DeliveryAddress;
+  setProfile: (profile: { profileImageUrl?: string; nickname?: string; email?: string; phone?: string }) => void;
   hydrateFromAuth: (auth: { email?: string | null; nickname?: string | null }) => void;
   updateProfile: (updates: { profileImageUrl?: string; nickname?: string; email?: string; phone?: string }) => void;
+  setDefaultAddress: (address: DeliveryAddress) => void;
   updateDefaultAddress: (updates: Partial<DeliveryAddress>) => void;
 }
 
-const emptyAddress: DeliveryAddress = {
+export const emptyDeliveryAddress: DeliveryAddress = {
   recipientName: '',
   recipientPhone: '',
   zipCode: '',
@@ -31,33 +34,40 @@ const emptyAddress: DeliveryAddress = {
 };
 
 export const useProfileStore = create<ProfileState>()(
-  persist(
-    (set) => ({
-      profileImageUrl: '',
-      nickname: '',
-      email: '',
-      phone: '',
-      defaultAddress: emptyAddress,
-      hydrateFromAuth: (auth) =>
-        set((state) => ({
-          nickname: state.nickname || auth.nickname || '',
-          email: state.email || auth.email || '',
-        })),
-      updateProfile: (updates) =>
-        set((state) => ({
-          ...state,
+  (set) => ({
+    profileImageUrl: '',
+    nickname: '',
+    email: '',
+    phone: '',
+    defaultAddress: emptyDeliveryAddress,
+    setProfile: (profile) =>
+      set((state) => ({
+        ...state,
+        ...profile,
+      })),
+    hydrateFromAuth: (auth) =>
+      set((state) => ({
+        nickname: state.nickname || auth.nickname || '',
+        email: state.email || auth.email || '',
+      })),
+    updateProfile: (updates) =>
+      set((state) => ({
+        ...state,
+        ...updates,
+      })),
+    setDefaultAddress: (address) =>
+      set({
+        defaultAddress: {
+          ...emptyDeliveryAddress,
+          ...address,
+        },
+      }),
+    updateDefaultAddress: (updates) =>
+      set((state) => ({
+        defaultAddress: {
+          ...state.defaultAddress,
           ...updates,
-        })),
-      updateDefaultAddress: (updates) =>
-        set((state) => ({
-          defaultAddress: {
-            ...state.defaultAddress,
-            ...updates,
-          },
-        })),
-    }),
-    {
-      name: 'profile-storage',
-    }
-  )
+        },
+      })),
+  })
 );
