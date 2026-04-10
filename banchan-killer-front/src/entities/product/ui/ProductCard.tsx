@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useEffect, useState } from 'react';
+import { ActionToast } from '@/components/ui/ActionToast';
 import { useCartStore } from '@/entities/cart/model/store';
 import { PRODUCT_CATEGORY_LABELS, type Product } from '../model/types';
 
@@ -9,12 +9,24 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onClick }: ProductCardProps) => {
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isToastOpen, setIsToastOpen] = useState(false);
     const addItem = useCartStore((state) => state.addItem);
 
-    const handleConfirmAddToCart = () => {
+    useEffect(() => {
+        if (!isToastOpen) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setIsToastOpen(false);
+        }, 3200);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [isToastOpen]);
+
+    const handleAddToCart = () => {
         addItem(product);
-        setIsConfirmOpen(false);
+        setIsToastOpen(true);
     };
 
     return (
@@ -63,7 +75,7 @@ export const ProductCard = ({ product, onClick }: ProductCardProps) => {
                             aria-label="장바구니 담기"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setIsConfirmOpen(true);
+                                handleAddToCart();
                             }}
                         >
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -74,14 +86,13 @@ export const ProductCard = ({ product, onClick }: ProductCardProps) => {
                 </div>
             </div>
 
-            <ConfirmDialog
-                open={isConfirmOpen}
-                title="장바구니에 담을까요?"
-                description={`${product.name}을(를) 장바구니에 추가합니다.`}
-                confirmText="담기"
-                cancelText="취소"
-                onConfirm={handleConfirmAddToCart}
-                onCancel={() => setIsConfirmOpen(false)}
+            <ActionToast
+                open={isToastOpen}
+                title="장바구니에 담았습니다"
+                description={`${product.name}을(를) 장바구니에 추가했습니다.`}
+                actionLabel="장바구니로 이동"
+                actionHref="/cart"
+                onClose={() => setIsToastOpen(false)}
             />
         </>
     );
