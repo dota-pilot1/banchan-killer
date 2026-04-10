@@ -1,0 +1,79 @@
+erDiagram
+    users {
+        bigint id PK "회원 ID"
+        varchar email "이메일"
+        varchar nickname "닉네임"
+        varchar role "권한"
+        boolean enabled "계정 활성화 여부"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    products {
+        bigint id PK "상품 ID"
+        varchar name "상품명"
+        text description "상품 설명"
+        integer price "현재 판매가"
+        integer stock_quantity "재고 수량"
+        varchar category "상품 카테고리"
+        varchar image_url "대표 이미지 URL"
+        varchar status "상품 상태"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    orders {
+        bigint id PK "주문 ID"
+        varchar order_number "주문번호"
+        bigint user_id FK "회원 ID"
+        varchar status "주문 상태"
+        varchar orderer_name "주문자 이름"
+        varchar orderer_phone "주문자 연락처"
+        varchar recipient_name "수령인 이름"
+        varchar recipient_phone "수령인 연락처"
+        varchar zip_code "우편번호"
+        varchar address1 "기본 주소"
+        varchar address2 "상세 주소"
+        varchar delivery_request "배송 요청사항"
+        integer items_amount "상품 금액 합계"
+        integer delivery_fee "배송비"
+        integer discount_amount "할인 금액"
+        integer total_amount "최종 결제 금액"
+        timestamp paid_at "결제 완료 시각"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    order_items {
+        bigint id PK "주문 아이템 ID"
+        bigint order_id FK "주문 ID"
+        bigint product_id FK "상품 ID"
+        varchar product_name "주문 당시 상품명"
+        varchar product_image_url "주문 당시 상품 이미지"
+        varchar product_category "주문 당시 상품 카테고리"
+        integer unit_price "주문 당시 단가"
+        integer quantity "주문 수량"
+        integer line_total_amount "라인 총액"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    payments {
+        bigint id PK "결제 ID"
+        bigint order_id FK "주문 ID"
+        varchar payment_provider "결제사"
+        varchar payment_key "외부 결제 키"
+        varchar method "결제 수단"
+        varchar status "결제 상태"
+        integer requested_amount "요청 금액"
+        integer approved_amount "승인 금액"
+        timestamp approved_at "승인 시각"
+        text raw_response "결제 원본 응답"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    users ||--o{ orders : "주문한다"
+    orders ||--|{ order_items : "포함한다"
+    products ||--o{ order_items : "주문된다"
+    orders ||--o| payments : "결제된다"
