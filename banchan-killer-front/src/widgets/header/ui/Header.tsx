@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Search, ShoppingCart, Menu } from 'lucide-react';
+import { useCartStore } from '@/entities/cart/model/store';
 import { useUserStore } from '@/entities/user/model/store';
 
 export const Header = () => {
   const { isAuthenticated, user, logout } = useUserStore();
   const location = useLocation();
+  const cartCount = useCartStore((state) => state.getTotalCount());
 
   const navItems = [
     { label: '야채 반찬', href: '/category/vegetable' },
@@ -53,12 +55,14 @@ export const Header = () => {
             />
           </div>
           
-          <Button variant="ghost" size="icon" className="relative">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center">
-              0
-            </span>
-          </Button>
+          <Link to="/cart" className="relative inline-flex">
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
+                {cartCount}
+              </span>
+            </Button>
+          </Link>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">

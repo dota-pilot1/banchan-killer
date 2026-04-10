@@ -1,0 +1,44 @@
+erDiagram
+    products {
+        bigint id PK "상품 ID"
+        varchar name "상품명"
+        text description "상품 설명"
+        integer price "판매가"
+        integer stock_quantity "재고 수량"
+        varchar category "상품 카테고리"
+        varchar image_url "대표 이미지 URL"
+        varchar status "상품 상태"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    users {
+        bigint id PK "회원 ID"
+        varchar email "이메일"
+        varchar password "비밀번호"
+        varchar nickname "닉네임"
+        varchar role "권한"
+        boolean enabled "계정 활성화 여부"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    carts {
+        bigint id PK "장바구니 ID"
+        bigint user_id FK "회원 ID"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    cart_items {
+        bigint id PK "장바구니 아이템 ID"
+        bigint cart_id FK "장바구니 ID"
+        bigint product_id FK "상품 ID"
+        integer quantity "담은 수량"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    products ||--o{ cart_items : "담긴다"
+    carts ||--o{ cart_items : "포함한다"
+    users ||--o| carts : "가진다"
