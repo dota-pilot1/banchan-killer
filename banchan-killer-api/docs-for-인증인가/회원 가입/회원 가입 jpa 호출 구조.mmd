@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant AS as AuthService<br/>(application)
+    participant UR as UserRepository<br/>(domain 인터페이스)
+    participant Impl as UserRepositoryImpl<br/>(infrastructure 구현체)
+    participant JPA as UserJpaRepository<br/>(Spring Data JPA)
+    participant DB as PostgreSQL
+
+    Note over AS,UR: AuthService는 도메인 인터페이스만 안다<br/>JPA의 존재를 모른다
+
+    AS->>Impl: userRepository.save(user)
+    Note over UR,Impl: UserRepository 타입으로 호출하지만<br/>실제 객체는 UserRepositoryImpl<br/>(Spring이 구현체를 주입했기 때문)
+
+    Impl->>JPA: jpaRepository.save(user)
+    Note over Impl,JPA: Impl은 단순 위임<br/>모든 호출을 JPA에 전달
+
+    JPA->>DB: INSERT INTO users (username, email, password, ...) VALUES (?, ?, ?, ...)
+    DB-->>JPA: OK (generated id)
+    JPA-->>Impl: User (id 포함)
+    Impl-->>AS: User (id 포함)
+
+    Note over AS,DB: 핵심: domain 레이어는 JPA를 모른다<br/>infrastructure만 교체하면 DB 기술 변경 가능

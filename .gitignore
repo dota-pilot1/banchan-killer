@@ -1,0 +1,21 @@
+# Root workspace artifacts
+node_modules/
+.DS_Store
+
+# Editor / local tool state
+.idea/
+.vscode/
+.claude/
+.sixth/
+
+# Frontend
+banchan-killer-front/node_modules/
+banchan-killer-front/dist/
+banchan-killer-front/dist-ssr/
+
+# Backend
+banchan-killer-api/.gradle/
+banchan-killer-api/build/
+
+# OS / logs
+*.log
