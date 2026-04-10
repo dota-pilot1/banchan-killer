@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
 import { useUserStore } from '@/entities/user/model/store';
+import { useCartStore } from '@/entities/cart/model/store';
 import { apiClient } from '@/shared/api/base';
 
 type OrderSummary = {
@@ -13,9 +14,15 @@ type OrderSummary = {
 
 export const PaymentPage = () => {
   const { isAuthenticated } = useUserStore();
+  const clearSelection = useCartStore((state) => state.clearSelection);
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 결제 페이지 진입 시 장바구니 선택 해제
+  useEffect(() => {
+    clearSelection();
+  }, []);
 
   useEffect(() => {
     if (!orderId) return;

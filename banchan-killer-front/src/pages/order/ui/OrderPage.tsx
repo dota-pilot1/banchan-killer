@@ -240,8 +240,7 @@ export const OrderPage = () => {
         })),
       });
 
-      clearSelection();
-      navigate(`/payment/${response.data.id}`);
+      navigate(`/payment/${response.data.id}`, { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || '주문 생성에 실패했습니다.');
     } finally {
