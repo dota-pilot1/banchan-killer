@@ -68,7 +68,7 @@ public class ProductDataInitializer implements CommandLineRunner {
         );
 
         if (productJpaRepository.count() > 0) {
-            productJpaRepository.deleteAll();
+            return;
         }
 
         productJpaRepository.saveAll(sampleProducts);
@@ -81,12 +81,14 @@ public class ProductDataInitializer implements CommandLineRunner {
      *   Spring Boot 는 애플리케이션 시작이 끝난 직후 run() 메서드를 자동 실행한다.
      * - 즉, 어디선가 직접 호출하는 구조가 아니라 Spring Boot 시작 규약에 의해 자동 실행된다.
      *
-     * 왜 기존 데이터가 있으면 지우고 다시 만드는가?
+     * 왜 상품이 0개일 때만 기본 데이터를 넣는가?
      * - 이 로직은 개발 전용 기본 반찬 데이터 세팅을 위한 코드다.
-     * - 서버를 다시 실행할 때마다 항상 같은 샘플 반찬 상태로 맞추기 위해
-     *   기존 상품 데이터가 있으면 deleteAll()로 비우고 saveAll()로 다시 생성한다.
-     * - 이렇게 하면 개발 중에 예전 샘플 데이터가 남아서 화면 확인이 꼬이지 않는다.
+     * - 처음 실행한 개발 환경에서는 상품 테이블이 비어 있을 수 있으므로
+     *   그때만 saveAll()로 샘플 반찬 데이터를 한 번 넣어준다.
+     * - 이미 상품이 들어 있다면 return 하여 아무 것도 하지 않는다.
+     * - 이렇게 해야 관리자 페이지에서 수정하거나 직접 등록한 상품 정보가
+     *   서버 재시작 때문에 덮어써지지 않는다.
      * - 실제 운영 단계에서는 관리자가 직접 상품을 입력해야 하므로,
-     *   이 방식은 운영용 정책이 아니라 개발 편의용 초기화 정책으로 이해하면 된다.
+     *   이 방식은 "빈 개발 DB를 빠르게 채우는 초기 데이터 정책" 정도로 보면 된다.
      */
 }

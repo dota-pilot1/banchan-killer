@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ClipboardList, LayoutTemplate, MessageSquare, PackageSearch, Tags, Users } from 'lucide-react';
+import { Camera, ClipboardList, LayoutTemplate, LoaderCircle, MessageSquare, PackageSearch, Tags, Upload, Users } from 'lucide-react';
 import { Header } from '@/widgets/header/ui/Header';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/shared/api/base';
@@ -78,7 +78,9 @@ export const AdminProductsPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadProducts = async () => {
     setIsLoading(true);
@@ -114,6 +116,38 @@ export const AdminProductsPage = () => {
 
   const handleChange = (field: keyof ProductFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post('/uploads/images', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      handleChange('imageUrl', response.data.imageUrl);
+    } catch (err: any) {
+      setError(err.response?.data?.message || '이미지 업로드에 실패했습니다.');
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = '';
+    }
   };
 
   const handleCreate = () => {
@@ -367,7 +401,15 @@ export const AdminProductsPage = () => {
             {isFormOpen ? (
               <>
                 <div className="px-6 py-5">
-                  <div className="overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+
+                  <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
                     {form.imageUrl ? (
                       <img
                         src={form.imageUrl}
@@ -379,6 +421,31 @@ export const AdminProductsPage = () => {
                         이미지 미리보기
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={openFilePicker}
+                      disabled={isUploadingImage}
+                      className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-sm transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+                      aria-label="이미지 업로드"
+                    >
+                      {isUploadingImage ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                    </button>
+
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-slate-900/70 to-transparent px-4 pb-4 pt-10">
+                      <div className="text-sm font-medium text-white">
+                        {isUploadingImage ? '이미지 업로드 중...' : '대표 이미지를 바로 변경할 수 있습니다'}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openFilePicker}
+                        disabled={isUploadingImage}
+                        className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isUploadingImage ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        이미지 변경
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -449,13 +516,16 @@ export const AdminProductsPage = () => {
                     </label>
 
                     <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-700">이미지 URL</span>
+                      <span className="text-sm font-medium text-slate-700">이미지 URL 직접 입력</span>
                       <input
                         value={form.imageUrl}
                         onChange={(e) => handleChange('imageUrl', e.target.value)}
                         className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
                         placeholder="https://..."
                       />
+                      <p className="text-xs text-slate-400">
+                        기본적으로는 이미지 영역의 업로드 버튼을 사용하고, URL 입력은 예외적인 경우에만 사용하세요.
+                      </p>
                     </label>
 
                     {error && (
