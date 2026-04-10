@@ -138,4 +138,12 @@ public class Order extends BaseEntity {
     public Integer getTotalAmount() {
         return totalAmount;
     }
+
+    public void markAsPaid() {
+        this.status = OrderStatus.PAID;
+    }
+
+    public void markAsPaymentFailed() {
+        this.status = OrderStatus.PAYMENT_FAILED;
+    }
 }
