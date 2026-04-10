@@ -24,34 +24,39 @@ export const ActionToast = ({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] w-[calc(100%-2rem)] max-w-sm rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-          <p className="text-sm leading-relaxed text-slate-600">{description}</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 pointer-events-none">
+      <div className="pointer-events-auto w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white/98 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
+              장바구니 추가 완료
+            </div>
+            <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">{title}</h3>
+            <p className="text-base leading-relaxed text-slate-600">{description}</p>
+          </div>
+
+          <button
+            type="button"
+            aria-label="토스트 닫기"
+            className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          aria-label="토스트 닫기"
-          className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mt-4 flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onClose}>
-          닫기
-        </Button>
-        {actionLabel && actionHref ? (
-          <Link to={actionHref}>
-            <Button size="sm" onClick={onClose}>
-              {actionLabel}
-            </Button>
-          </Link>
-        ) : null}
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <Button variant="outline" size="lg" onClick={onClose}>
+            닫기
+          </Button>
+          {actionLabel && actionHref ? (
+            <Link to={actionHref}>
+              <Button size="lg" className="min-w-36" onClick={onClose}>
+                {actionLabel}
+              </Button>
+            </Link>
+          ) : null}
+        </div>
       </div>
     </div>
   );
