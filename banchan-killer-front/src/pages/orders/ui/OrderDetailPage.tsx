@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
@@ -37,6 +37,7 @@ type OrderDetail = {
 
 export const OrderDetailPage = () => {
   const { isAuthenticated } = useUserStore();
+  const navigate = useNavigate();
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState('');
@@ -78,8 +79,22 @@ export const OrderDetailPage = () => {
             <Link to="/orders" className="text-sm font-semibold text-orange-600">
               주문 목록으로
             </Link>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">주문 상세</h1>
-            <p className="text-sm leading-6 text-slate-600">생성된 주문과 배송 정보를 바로 확인할 수 있습니다.</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">주문 상세</h1>
+              {order && (
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  order.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                  order.status === 'PENDING_PAYMENT' ? 'bg-amber-100 text-amber-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {order.status === 'PAID' ? '결제완료' :
+                   order.status === 'PENDING_PAYMENT' ? '결제대기' : '결제실패'}
+                </span>
+              )}
+            </div>
+            <p className="text-sm leading-6 text-slate-600">
+              {order ? `주문번호 ${order.orderNumber}` : '주문 정보를 불러오는 중입니다.'}
+            </p>
           </div>
         </section>
 
@@ -138,7 +153,9 @@ export const OrderDetailPage = () => {
               </article>
 
               <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-2xl font-bold text-slate-900">결제 예정 금액</h3>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {order.status === 'PAID' ? '결제 완료' : '결제 금액'}
+                </h3>
                 <div className="mt-5 space-y-4 text-sm text-slate-600">
                   <div className="flex items-center justify-between">
                     <span>상품 금액</span>
@@ -148,10 +165,12 @@ export const OrderDetailPage = () => {
                     <span>배송비</span>
                     <span className="font-semibold text-slate-900">{order.deliveryFee.toLocaleString()}원</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span>할인</span>
-                    <span className="font-semibold text-slate-900">{order.discountAmount.toLocaleString()}원</span>
-                  </div>
+                  {order.discountAmount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span>할인</span>
+                      <span className="font-semibold text-red-500">-{order.discountAmount.toLocaleString()}원</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 border-t border-slate-200 pt-6">
@@ -161,12 +180,23 @@ export const OrderDetailPage = () => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 text-base font-semibold text-white transition hover:bg-slate-800"
-                >
-                  결제 연동은 다음 단계에서 연결
-                </button>
+                {order.status === 'PAID' ? (
+                  <div className="mt-6 rounded-2xl bg-emerald-50 p-4 text-center">
+                    <span className="text-sm font-semibold text-emerald-700">✅ 결제가 완료되었습니다</span>
+                  </div>
+                ) : order.status === 'PENDING_PAYMENT' ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/payment/${order.id}`)}
+                    className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-blue-600 text-base font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    결제하기
+                  </button>
+                ) : (
+                  <div className="mt-6 rounded-2xl bg-red-50 p-4 text-center">
+                    <span className="text-sm font-semibold text-red-700">결제 실패</span>
+                  </div>
+                )}
               </article>
             </section>
           </div>
