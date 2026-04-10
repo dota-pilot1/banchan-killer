@@ -6,6 +6,7 @@ import { CartPage } from '@/pages/cart/ui/CartPage';
 import { HomePage } from '@/pages/home/ui/HomePage';
 import { CategoryPage } from '@/pages/category/ui/CategoryPage';
 import { LoginPage } from '@/pages/login/ui/LoginPage';
+import { MyPage } from '@/pages/mypage/ui/MyPage';
 import { SignupPage } from '@/pages/signup/ui/SignupPage';
 
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
           <Route path="/admin/products" element={<AdminProductsPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

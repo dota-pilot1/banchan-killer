@@ -1,6 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Search, ShoppingCart, Menu } from 'lucide-react';
+import { ChevronDown, MapPin, Menu, Search, ShoppingCart, User } from 'lucide-react';
 import { useCartStore } from '@/entities/cart/model/store';
 import { useUserStore } from '@/entities/user/model/store';
 
@@ -8,12 +9,28 @@ export const Header = () => {
   const { isAuthenticated, user, logout } = useUserStore();
   const location = useLocation();
   const cartCount = useCartStore((state) => state.getTotalCount());
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const navItems = [
     { label: '야채 반찬', href: '/category/vegetable' },
     { label: '고기 반찬', href: '/category/meat' },
     { label: '김치류', href: '/category/kimchi' },
   ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!dropdownRef.current?.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -74,8 +91,55 @@ export const Header = () => {
                   관리자
                 </Link>
               )}
-              <span className="text-sm font-medium">{user?.nickname || user?.email}님</span>
-              <Button variant="outline" size="sm" onClick={logout}>로그아웃</Button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+                >
+                  <span>{user?.nickname || user?.email}님</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isDropdownOpen ? (
+                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-64 rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-2xl">
+                    <div className="rounded-[1.25rem] bg-slate-50 px-4 py-3">
+                      <p className="text-sm font-bold text-slate-900">{user?.nickname || user?.email}</p>
+                      <p className="mt-1 text-xs text-slate-500">{user?.email}</p>
+                    </div>
+
+                    <div className="mt-3 space-y-1">
+                      <Link
+                        to="/mypage?tab=profile"
+                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        프로필
+                      </Link>
+                      <Link
+                        to="/mypage?tab=address"
+                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <MapPin className="h-4 w-4" />
+                        배송지 관리
+                      </Link>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          logout();
+                        }}
+                      >
+                        <span className="inline-flex h-4 w-4 items-center justify-center text-xs font-bold">↗</span>
+                        로그아웃
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : (
             <Link to="/login" className={buttonVariants({ variant: "default", size: "sm" })}>
