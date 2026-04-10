@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class ProductController {
     @GetMapping
     @Operation(summary = "상품 목록 조회", description = "등록된 모든 상품 목록을 페이징하여 조회합니다.")
     public ResponseEntity<Page<ProductResponse>> getProducts(
-            @PageableDefault(size = 20) Pageable pageable,
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) ProductCategory category) {
         return ResponseEntity.ok(productService.getProducts(pageable, category));
     }
