@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Camera, ClipboardList, LayoutTemplate, LoaderCircle, MessageSquare, PackageSearch, Tags, Upload, Users } from 'lucide-react';
+import { Camera, ClipboardList, LayoutTemplate, LoaderCircle, MessageSquare, PackageSearch, Tags, Upload, Users, type LucideIcon } from 'lucide-react';
 import { Header } from '@/widgets/header/ui/Header';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/shared/api/base';
@@ -31,10 +31,19 @@ const categoryOptions: Array<{ value: ProductCategory; label: string }> = [
   { value: 'KIMCHI', label: '김치류' },
 ];
 
-const adminMenuItems = [
+type AdminMenuItem = {
+  title: string;
+  description: string;
+  active: boolean;
+  icon: LucideIcon;
+  href?: string;
+};
+
+const adminMenuItems: AdminMenuItem[] = [
   {
     title: '상품 관리',
     description: '상품 등록, 수정, 삭제',
+    href: '/admin/products',
     active: true,
     icon: PackageSearch,
   },
@@ -47,6 +56,7 @@ const adminMenuItems = [
   {
     title: '회원 관리',
     description: '회원 목록과 상태 관리',
+    href: '/admin/users',
     active: false,
     icon: Users,
   },
@@ -71,7 +81,7 @@ const adminMenuItems = [
 ] as const;
 
 export const AdminProductsPage = () => {
-  const { isAuthenticated } = useUserStore();
+  const { isAuthenticated, user } = useUserStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [form, setForm] = useState<ProductFormState>(initialFormState);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -96,16 +106,22 @@ export const AdminProductsPage = () => {
     }
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !isAdmin) {
       return;
     }
 
     void loadProducts();
-  }, [isAuthenticated]);
+  }, [isAdmin, isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   const resetForm = () => {
@@ -237,9 +253,8 @@ export const AdminProductsPage = () => {
               {adminMenuItems.map((item) => {
                 const Icon = item.icon;
 
-                return (
+                const content = (
                   <div
-                    key={item.title}
                     className={`rounded-2xl border px-4 py-4 transition-colors ${
                       item.active
                         ? 'border-orange-200 bg-orange-50'
@@ -260,7 +275,7 @@ export const AdminProductsPage = () => {
                           <p className="mt-1 text-sm text-slate-500">{item.description}</p>
                         </div>
                       </div>
-                      {!item.active && (
+                      {!item.active && !item.href && (
                         <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-400">
                           구현 예정
                         </span>
@@ -268,6 +283,16 @@ export const AdminProductsPage = () => {
                     </div>
                   </div>
                 );
+
+                if (item.href) {
+                  return (
+                    <Link key={item.title} to={item.href} className="block">
+                      {content}
+                    </Link>
+                  );
+                }
+
+                return <div key={item.title}>{content}</div>;
               })}
             </nav>
           </aside>

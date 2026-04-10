@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Header } from '@/widgets/header/ui/Header';
 import { useProducts } from '@/entities/product/api/useProducts';
 import { ProductCard } from '@/entities/product/ui/ProductCard';
-import { CATEGORY_PAGE_CONFIG, PRODUCT_CATEGORY_LABELS, type CategoryPageSlug } from '@/entities/product/model/types';
+import { CATEGORY_PAGE_CONFIG, type CategoryPageSlug } from '@/entities/product/model/types';
 
 export const CategoryPage = () => {
   const { slug } = useParams<{ slug: CategoryPageSlug }>();
@@ -21,36 +21,35 @@ export const CategoryPage = () => {
       <Header />
 
       <main className="flex-1">
-        <section className="border-b bg-white">
-          <div className="container mx-auto px-4 py-16">
-            <div className="max-w-3xl space-y-4">
-              <Link to="/" className="inline-flex items-center text-sm font-semibold text-orange-600">
-                홈으로 <ArrowRight className="ml-1 h-4 w-4 rotate-180" />
-              </Link>
-              <h1 className="text-5xl font-extrabold tracking-tight text-slate-900">
-                {config.label}
-              </h1>
-              <p className="text-lg text-slate-600">
-                {config.description}
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                {config.categories.map((category) => (
-                  <span
-                    key={category}
-                    className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600"
-                  >
-                    {PRODUCT_CATEGORY_LABELS[category]}
-                  </span>
-                ))}
+        <section className="border-b bg-white/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-10">
+            <div className="flex flex-col gap-3">
+              <nav className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                <Link to="/" className="hover:text-orange-500 transition-colors">홈</Link>
+                <ArrowRight className="h-3 w-3" />
+                <span className="text-slate-900">{config.label}</span>
+              </nav>
+              
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div className="space-y-1.5">
+                  <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                    {config.label}
+                  </h1>
+                  <p className="text-slate-500 max-w-2xl">
+                    {config.description}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  실속 있는 자취생 식탁을 위한 추천 메뉴
+                </div>
               </div>
-              <p className="text-sm text-slate-500">
-                매일 식탁에 자연스럽게 올라가는 반찬부터 먼저 보여드립니다.
-              </p>
             </div>
           </div>
         </section>
 
-        <section className="py-16">
+        <section className="py-12">
           <div className="container mx-auto px-4">
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

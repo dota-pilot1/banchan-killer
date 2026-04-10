@@ -1,0 +1,74 @@
+erDiagram
+    users {
+        bigint id PK "회원 ID"
+        varchar email "이메일"
+        varchar password "비밀번호"
+        varchar nickname "닉네임"
+        varchar phone "연락처"
+        varchar profile_image_url "프로필 이미지 URL"
+        varchar role "권한"
+        boolean enabled "활성화 여부"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    user_addresses {
+        bigint id PK "배송지 ID"
+        bigint user_id FK "회원 ID"
+        varchar recipient_name "수령인 이름"
+        varchar recipient_phone "수령인 연락처"
+        varchar zip_code "우편번호"
+        varchar address1 "기본 주소"
+        varchar address2 "상세 주소"
+        varchar delivery_request "기본 배송 요청사항"
+        boolean is_default "기본 배송지 여부"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    orders {
+        bigint id PK "주문 ID"
+        varchar order_number "주문번호"
+        bigint user_id FK "회원 ID"
+        bigint address_id FK "사용한 배송지 ID"
+        varchar status "주문 상태"
+        varchar orderer_name "주문자 이름"
+        varchar orderer_phone "주문자 연락처"
+        varchar recipient_name "수령인 이름"
+        varchar recipient_phone "수령인 연락처"
+        varchar zip_code "우편번호"
+        varchar address1 "기본 주소"
+        varchar address2 "상세 주소"
+        varchar delivery_request "배송 요청사항"
+        integer total_amount "최종 결제 금액"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    order_items {
+        bigint id PK "주문 아이템 ID"
+        bigint order_id FK "주문 ID"
+        bigint product_id FK "상품 ID"
+        varchar product_name "주문 당시 상품명"
+        integer unit_price "주문 당시 단가"
+        integer quantity "주문 수량"
+        integer line_total_amount "라인 총액"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    products {
+        bigint id PK "상품 ID"
+        varchar name "상품명"
+        integer price "현재 판매가"
+        varchar category "카테고리"
+        varchar status "상품 상태"
+        timestamp created_at "생성일"
+        timestamp updated_at "수정일"
+    }
+
+    users ||--o{ user_addresses : "배송지를 가진다"
+    users ||--o{ orders : "주문한다"
+    user_addresses ||--o{ orders : "주문에 사용된다"
+    orders ||--|{ order_items : "포함한다"
+    products ||--o{ order_items : "주문된다"
