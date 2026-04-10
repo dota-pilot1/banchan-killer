@@ -12,6 +12,7 @@ export const PaymentSuccessPage = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [paymentId, setPaymentId] = useState<number | null>(null);
   const confirmedRef = useRef(false);
 
   const paymentKey = searchParams.get('paymentKey');
@@ -37,6 +38,7 @@ export const PaymentSuccessPage = () => {
           amount: Number(amount),
         });
         setOrderId(res.data.orderId);
+        setPaymentId(res.data.id);
         setStatus('success');
         // 장바구니 갱신 (백엔드에서 삭제됨)
         fetchCart();
@@ -75,12 +77,12 @@ export const PaymentSuccessPage = () => {
               주문번호 <span className="font-mono font-semibold">{orderNumber}</span>
             </p>
             <div className="mt-8 flex gap-3 justify-center">
-              {orderId && (
+              {paymentId && (
                 <Link
-                  to={`/orders/${orderId}`}
+                  to={`/payments/${paymentId}`}
                   className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
-                  주문 상세 보기
+                  결제 상세 보기
                 </Link>
               )}
               <Link

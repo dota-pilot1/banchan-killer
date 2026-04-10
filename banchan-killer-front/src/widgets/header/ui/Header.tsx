@@ -138,6 +138,14 @@ export const Header = () => {
                         <span className="inline-flex h-4 w-4 items-center justify-center text-xs font-bold">≡</span>
                         주문 내역
                       </Link>
+                      <Link
+                        to="/payments"
+                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <span className="inline-flex h-4 w-4 items-center justify-center text-xs font-bold">💳</span>
+                        결제 내역
+                      </Link>
                       <button
                         type="button"
                         className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"

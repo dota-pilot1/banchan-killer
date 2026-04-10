@@ -11,6 +11,8 @@ import { OrderPage } from '@/pages/order/ui/OrderPage';
 import { OrderDetailPage } from '@/pages/orders/ui/OrderDetailPage';
 import { OrdersPage } from '@/pages/orders/ui/OrdersPage';
 import { PaymentPage } from '@/pages/payment/ui/PaymentPage';
+import { PaymentsPage } from '@/pages/payment/ui/PaymentsPage';
+import { PaymentDetailPage } from '@/pages/payment/ui/PaymentDetailPage';
 import { PaymentSuccessPage } from '@/pages/payment/ui/PaymentSuccessPage';
 import { PaymentFailPage } from '@/pages/payment/ui/PaymentFailPage';
 import { SignupPage } from '@/pages/signup/ui/SignupPage';
@@ -37,6 +39,8 @@ function App() {
           <Route path="/order" element={<OrderPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/payments/:paymentId" element={<PaymentDetailPage />} />
           <Route path="/payment/success" element={<PaymentSuccessPage />} />
           <Route path="/payment/fail" element={<PaymentFailPage />} />
           <Route path="/payment/:orderId" element={<PaymentPage />} />

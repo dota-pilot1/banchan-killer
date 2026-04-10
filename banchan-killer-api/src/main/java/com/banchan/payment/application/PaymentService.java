@@ -9,7 +9,10 @@ import com.banchan.order.infrastructure.OrderJpaRepository;
 import com.banchan.payment.domain.Payment;
 import com.banchan.payment.infrastructure.PaymentJpaRepository;
 import com.banchan.payment.presentation.PaymentConfirmRequest;
+import com.banchan.payment.presentation.PaymentDetailResponse;
 import com.banchan.payment.presentation.PaymentResponse;
+import com.banchan.user.domain.User;
+import com.banchan.user.domain.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +39,7 @@ public class PaymentService {
     private final OrderItemJpaRepository orderItemJpaRepository;
     private final PaymentJpaRepository paymentJpaRepository;
     private final CartItemJpaRepository cartItemJpaRepository;
+    private final UserRepository userRepository;
     private final RestClient tossRestClient;
 
     public PaymentService(
@@ -43,12 +47,14 @@ public class PaymentService {
             OrderItemJpaRepository orderItemJpaRepository,
             PaymentJpaRepository paymentJpaRepository,
             CartItemJpaRepository cartItemJpaRepository,
+            UserRepository userRepository,
             @Value("${tosspayments.secret-key}") String secretKey
     ) {
         this.orderJpaRepository = orderJpaRepository;
         this.orderItemJpaRepository = orderItemJpaRepository;
         this.paymentJpaRepository = paymentJpaRepository;
         this.cartItemJpaRepository = cartItemJpaRepository;
+        this.userRepository = userRepository;
 
         String encoded = Base64.getEncoder()
                 .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
@@ -153,6 +159,38 @@ public class PaymentService {
                 order.getOrderNumber(), request.paymentKey(), request.amount());
 
         return PaymentResponse.from(payment);
+    }
+
+    /**
+     * 내 결제 내역 목록
+     */
+    public List<PaymentDetailResponse> getMyPayments(org.springframework.security.core.Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        return paymentJpaRepository.findByOrderUserOrderByCreatedAtDesc(user).stream()
+                .map(payment -> {
+                    var items = orderItemJpaRepository.findByOrderOrderByCreatedAtAsc(payment.getOrder());
+                    return PaymentDetailResponse.from(payment, items);
+                })
+                .toList();
+    }
+
+    /**
+     * 결제 상세 조회
+     */
+    public PaymentDetailResponse getPaymentDetail(org.springframework.security.core.Authentication authentication, Long paymentId) {
+        User user = getCurrentUser(authentication);
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
+        if (!payment.getOrder().getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
+        var items = orderItemJpaRepository.findByOrderOrderByCreatedAtAsc(payment.getOrder());
+        return PaymentDetailResponse.from(payment, items);
+    }
+
+    private User getCurrentUser(org.springframework.security.core.Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 
     private LocalDateTime parseDateTime(Object value) {
