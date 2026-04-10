@@ -63,8 +63,11 @@ export const Header = () => {
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
               {isAuthenticated && (
-                <Link to="/admin/products" className="text-sm font-semibold text-slate-500 transition-colors hover:text-primary">
-                  상품 관리
+                <Link
+                  to="/admin/products"
+                  className="inline-flex h-9 items-center rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+                >
+                  관리자
                 </Link>
               )}
               <span className="text-sm font-medium">{user?.nickname || user?.email}님</span>
