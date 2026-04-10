@@ -22,7 +22,9 @@ interface CartState {
   toggleSelectAll: () => void;
   getSelectedItems: () => CartItem[];
   clearSelection: () => void;
+  removeSelectedItems: () => void;
   clearCart: () => void;
+  getItemCount: () => number;
   getTotalCount: () => number;
   getTotalPrice: () => number;
   getSelectedTotalPrice: () => number;
@@ -100,7 +102,12 @@ export const useCartStore = create<CartState>()(
       getSelectedItems: () =>
         get().items.filter((item) => get().selectedProductIds.includes(item.productId)),
       clearSelection: () => set({ selectedProductIds: [] }),
+      removeSelectedItems: () => set((state) => ({
+        items: state.items.filter((item) => !state.selectedProductIds.includes(item.productId)),
+        selectedProductIds: [],
+      })),
       clearCart: () => set({ items: [], selectedProductIds: [] }),
+      getItemCount: () => get().items.length,
       getTotalCount: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
       getTotalPrice: () =>

@@ -18,7 +18,7 @@ type OrderSummary = {
 
 export const PaymentPage = () => {
   const { isAuthenticated, user } = useUserStore();
-  const clearCart = useCartStore((state) => state.clearCart);
+  const removeSelectedItems = useCartStore((state) => state.removeSelectedItems);
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export const PaymentPage = () => {
 
   // 결제 페이지 진입 시 장바구니 선택 해제
   useEffect(() => {
-    clearCart();
+    removeSelectedItems();
   }, []);
 
   // 주문 정보 로드
