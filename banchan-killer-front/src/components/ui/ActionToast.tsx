@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 interface ActionToastProps {
   open: boolean;
+  badgeLabel?: string;
   title: string;
   description: string;
   actionLabel?: string;
@@ -13,6 +14,7 @@ interface ActionToastProps {
 
 export const ActionToast = ({
   open,
+  badgeLabel = '장바구니 추가 완료',
   title,
   description,
   actionLabel,
@@ -29,7 +31,7 @@ export const ActionToast = ({
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
-              장바구니 추가 완료
+              {badgeLabel}
             </div>
             <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">{title}</h3>
             <p className="text-base leading-relaxed text-slate-600">{description}</p>
