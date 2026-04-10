@@ -6,21 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class ProductDataInitializer implements CommandLineRunner {
 
     private final ProductJpaRepository productJpaRepository;
-    private static final Set<String> LEGACY_SAMPLE_NAMES = Set.of(
-            "한입 메추리알 장조림",
-            "소고기 무국",
-            "직화 제육볶음",
-            "아삭 깍두기"
-    );
 
     @Override
     public void run(String... args) {
@@ -75,17 +67,26 @@ public class ProductDataInitializer implements CommandLineRunner {
                         .build()
         );
 
-        List<Product> existingProducts = productJpaRepository.findAll();
-
-        if (existingProducts.isEmpty()) {
-            productJpaRepository.saveAll(sampleProducts);
-            return;
-        }
-
-        Set<String> existingNames = new HashSet<>(existingProducts.stream().map(Product::getName).toList());
-        if (existingProducts.size() <= LEGACY_SAMPLE_NAMES.size() && LEGACY_SAMPLE_NAMES.containsAll(existingNames)) {
+        if (productJpaRepository.count() > 0) {
             productJpaRepository.deleteAll();
-            productJpaRepository.saveAll(sampleProducts);
         }
+
+        productJpaRepository.saveAll(sampleProducts);
     }
+
+    /*
+     * 왜 서버 시작과 함께 실행되는가?
+     * - 이 클래스는 @Component 가 붙어 있어서 Spring Bean 으로 등록된다.
+     * - 동시에 CommandLineRunner 를 구현하고 있기 때문에,
+     *   Spring Boot 는 애플리케이션 시작이 끝난 직후 run() 메서드를 자동 실행한다.
+     * - 즉, 어디선가 직접 호출하는 구조가 아니라 Spring Boot 시작 규약에 의해 자동 실행된다.
+     *
+     * 왜 기존 데이터가 있으면 지우고 다시 만드는가?
+     * - 이 로직은 개발 전용 기본 반찬 데이터 세팅을 위한 코드다.
+     * - 서버를 다시 실행할 때마다 항상 같은 샘플 반찬 상태로 맞추기 위해
+     *   기존 상품 데이터가 있으면 deleteAll()로 비우고 saveAll()로 다시 생성한다.
+     * - 이렇게 하면 개발 중에 예전 샘플 데이터가 남아서 화면 확인이 꼬이지 않는다.
+     * - 실제 운영 단계에서는 관리자가 직접 상품을 입력해야 하므로,
+     *   이 방식은 운영용 정책이 아니라 개발 편의용 초기화 정책으로 이해하면 된다.
+     */
 }
