@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import { Header } from '@/widgets/header/ui/Header';
-import { useCartStore } from '@/entities/cart/model/store';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
 
@@ -18,7 +17,6 @@ type OrderSummary = {
 
 export const PaymentPage = () => {
   const { isAuthenticated, user } = useUserStore();
-  const removeSelectedItems = useCartStore((state) => state.removeSelectedItems);
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,10 +25,7 @@ export const PaymentPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [toss, setToss] = useState<any>(null);
 
-  // 결제 페이지 진입 시 장바구니 선택 해제
-  useEffect(() => {
-    removeSelectedItems();
-  }, []);
+  // 장바구니 삭제는 백엔드 PaymentService에서 결제 승인 시 처리
 
   // 주문 정보 로드
   useEffect(() => {

@@ -8,8 +8,13 @@ import { useUserStore } from '@/entities/user/model/store';
 export const Header = () => {
   const { isAuthenticated, user, logout } = useUserStore();
   const location = useLocation();
-  const cartCount = useCartStore((state) => state.getTotalCount());
+  const cartCount = useCartStore((state) => state.getItemCount());
+  const fetchCart = useCartStore((state) => state.fetchCart);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) fetchCart();
+  }, [isAuthenticated, fetchCart]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const navItems = [

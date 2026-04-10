@@ -1,7 +1,10 @@
 package com.banchan.payment.application;
 
+import com.banchan.cart.infrastructure.CartItemJpaRepository;
 import com.banchan.order.domain.Order;
+import com.banchan.order.domain.OrderItem;
 import com.banchan.order.domain.OrderStatus;
+import com.banchan.order.infrastructure.OrderItemJpaRepository;
 import com.banchan.order.infrastructure.OrderJpaRepository;
 import com.banchan.payment.domain.Payment;
 import com.banchan.payment.infrastructure.PaymentJpaRepository;
@@ -29,16 +32,22 @@ public class PaymentService {
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final OrderJpaRepository orderJpaRepository;
+    private final OrderItemJpaRepository orderItemJpaRepository;
     private final PaymentJpaRepository paymentJpaRepository;
+    private final CartItemJpaRepository cartItemJpaRepository;
     private final RestClient tossRestClient;
 
     public PaymentService(
             OrderJpaRepository orderJpaRepository,
+            OrderItemJpaRepository orderItemJpaRepository,
             PaymentJpaRepository paymentJpaRepository,
+            CartItemJpaRepository cartItemJpaRepository,
             @Value("${tosspayments.secret-key}") String secretKey
     ) {
         this.orderJpaRepository = orderJpaRepository;
+        this.orderItemJpaRepository = orderItemJpaRepository;
         this.paymentJpaRepository = paymentJpaRepository;
+        this.cartItemJpaRepository = cartItemJpaRepository;
 
         String encoded = Base64.getEncoder()
                 .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
@@ -126,6 +135,18 @@ public class PaymentService {
 
         // 7. 주문 상태 변경
         order.markAsPaid();
+
+        // 8. 장바구니에서 결제한 상품 삭제
+        try {
+            List<Long> productIds = orderItemJpaRepository.findByOrderOrderByCreatedAtAsc(order).stream()
+                    .map(OrderItem::getProductId)
+                    .toList();
+            if (!productIds.isEmpty()) {
+                cartItemJpaRepository.deleteByUserAndProductIdIn(order.getUser(), productIds);
+            }
+        } catch (Exception e) {
+            log.warn("장바구니 삭제 실패 (결제는 정상 처리됨): {}", e.getMessage());
+        }
 
         log.info("결제 완료: orderNumber={}, paymentKey={}, amount={}",
                 order.getOrderNumber(), request.paymentKey(), request.amount());

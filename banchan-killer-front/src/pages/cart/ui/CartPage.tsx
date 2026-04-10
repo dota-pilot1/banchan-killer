@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,9 @@ export const CartPage = () => {
   const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
   const selectedProductIds = useCartStore((state) => state.selectedProductIds);
+  const fetchCart = useCartStore((state) => state.fetchCart);
+
+  useEffect(() => { fetchCart(); }, [fetchCart]);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const toggleSelect = useCartStore((state) => state.toggleSelect);
@@ -86,7 +90,7 @@ export const CartPage = () => {
                         <Button
                           variant="outline"
                           size="icon-sm"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         >
                           -
                         </Button>
@@ -96,7 +100,7 @@ export const CartPage = () => {
                         <Button
                           variant="outline"
                           size="icon-sm"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
                           +
                         </Button>
@@ -109,7 +113,7 @@ export const CartPage = () => {
                         <Button
                           variant="ghost"
                           className="text-slate-500 hover:text-red-600"
-                          onClick={() => removeItem(item.productId)}
+                          onClick={() => removeItem(item.id)}
                         >
                           삭제
                         </Button>
