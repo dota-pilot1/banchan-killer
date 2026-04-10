@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
+import { useCartStore } from '@/entities/cart/model/store';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
 
 export const PaymentSuccessPage = () => {
   const { isAuthenticated } = useUserStore();
+  const fetchCart = useCartStore((state) => state.fetchCart);
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [orderId, setOrderId] = useState<number | null>(null);
+  const confirmedRef = useRef(false);
 
   const paymentKey = searchParams.get('paymentKey');
   const orderNumber = searchParams.get('orderId');
@@ -22,6 +25,10 @@ export const PaymentSuccessPage = () => {
       return;
     }
 
+    // StrictMode 중복 호출 방지
+    if (confirmedRef.current) return;
+    confirmedRef.current = true;
+
     void (async () => {
       try {
         const res = await apiClient.post('/payments/confirm', {
@@ -31,12 +38,20 @@ export const PaymentSuccessPage = () => {
         });
         setOrderId(res.data.orderId);
         setStatus('success');
+        // 장바구니 갱신 (백엔드에서 삭제됨)
+        fetchCart();
       } catch (err: any) {
-        setStatus('error');
-        setErrorMessage(err.response?.data?.message || '결제 승인에 실패했습니다.');
+        const msg = err.response?.data?.message || '';
+        // 이미 처리된 결제면 성공으로 처리
+        if (msg.includes('이미 결제') || msg.includes('이미 처리')) {
+          setStatus('success');
+        } else {
+          setStatus('error');
+          setErrorMessage(msg || '결제 승인에 실패했습니다.');
+        }
       }
     })();
-  }, [paymentKey, orderNumber, amount]);
+  }, [paymentKey, orderNumber, amount, fetchCart]);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
