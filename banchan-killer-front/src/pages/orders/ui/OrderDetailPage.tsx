@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
+import { formatPhone } from '@/shared/lib/phone';
 
 type OrderItem = {
   id: number;
@@ -130,7 +131,7 @@ export const OrderDetailPage = () => {
                 <h3 className="text-2xl font-bold text-slate-900">배송 정보</h3>
                 <div className="mt-5 space-y-3 text-sm text-slate-600">
                   <p><span className="font-semibold text-slate-800">수령인</span> {order.recipientName}</p>
-                  <p><span className="font-semibold text-slate-800">연락처</span> {order.recipientPhone}</p>
+                  <p><span className="font-semibold text-slate-800">연락처</span> {formatPhone(order.recipientPhone)}</p>
                   <p><span className="font-semibold text-slate-800">주소</span> [{order.zipCode}] {order.address1} {order.address2}</p>
                   <p><span className="font-semibold text-slate-800">요청사항</span> {order.deliveryRequest || '-'}</p>
                 </div>

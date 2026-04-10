@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { emptyDeliveryAddress, type DeliveryAddress, useProfileStore } from '@/entities/user/model/profileStore';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
+import { formatPhone, isValidPhone } from '@/shared/lib/phone';
 
 type MyPageTab = 'profile' | 'address';
 
@@ -134,6 +135,10 @@ export const MyPage = () => {
   const initials = (profileForm.nickname || user?.email || 'U').slice(0, 1).toUpperCase();
 
   const handleProfileSave = () => {
+    if (profileForm.phone && !isValidPhone(profileForm.phone)) {
+      setError('올바른 전화번호를 입력해 주세요.');
+      return;
+    }
     void (async () => {
       try {
         const response = await apiClient.patch('/users/me', {
@@ -385,10 +390,11 @@ export const MyPage = () => {
                     <label className="space-y-2">
                       <span className="text-sm font-semibold text-slate-700">연락처</span>
                       <input
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))}
+                        value={formatPhone(profileForm.phone)}
+                        onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: formatPhone(e.target.value) }))}
                         className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
                         placeholder="010-0000-0000"
+                        maxLength={13}
                       />
                     </label>
                     <label className="space-y-2 sm:col-span-2">
@@ -537,10 +543,11 @@ export const MyPage = () => {
                       <label className="space-y-2">
                         <span className="text-sm font-semibold text-slate-700">수령인 연락처</span>
                         <input
-                          value={addressForm.recipientPhone}
-                          onChange={(e) => setAddressForm((prev) => ({ ...prev, recipientPhone: e.target.value }))}
+                          value={formatPhone(addressForm.recipientPhone)}
+                          onChange={(e) => setAddressForm((prev) => ({ ...prev, recipientPhone: formatPhone(e.target.value) }))}
                           className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-slate-400"
                           placeholder="010-0000-0000"
+                          maxLength={13}
                         />
                       </label>
                       <label className="space-y-2">

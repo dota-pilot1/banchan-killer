@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Header } from '@/widgets/header/ui/Header';
-import { Button } from '@/components/ui/button';
+import { ActionToast } from '@/components/ui/ActionToast';
 import { useCartStore } from '@/entities/cart/model/store';
 import { PRODUCT_CATEGORY_LABELS } from '@/entities/product/model/types';
 import { type DeliveryAddress, useProfileStore } from '@/entities/user/model/profileStore';
 import { useUserStore } from '@/entities/user/model/store';
 import { apiClient } from '@/shared/api/base';
+import { formatPhone, isValidPhone } from '@/shared/lib/phone';
 
 const mapAddress = (value: Record<string, unknown>): DeliveryAddress => ({
   id: Number(value.id),
@@ -26,6 +27,8 @@ const buildAddressLabel = (address: DeliveryAddress, index: number) => {
 
   return `배송지${index + 1}`;
 };
+
+const normalizeText = (value?: string | null) => (value ?? '').trim();
 
 export const OrderPage = () => {
   const navigate = useNavigate();
@@ -62,6 +65,13 @@ export const OrderPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [validationToast, setValidationToast] = useState('');
+
+  const ordererNameRef = useRef<HTMLInputElement | null>(null);
+  const ordererPhoneRef = useRef<HTMLInputElement | null>(null);
+  const recipientNameRef = useRef<HTMLInputElement | null>(null);
+  const recipientPhoneRef = useRef<HTMLInputElement | null>(null);
+  const address1Ref = useRef<HTMLInputElement | null>(null);
 
   const selectedAddress = useMemo(
     () => savedAddresses.find((address) => address.id === selectedAddressId) ?? null,
@@ -136,45 +146,92 @@ export const OrderPage = () => {
     return <Navigate to="/cart" replace />;
   }
 
+  const showValidationFeedback = (message: string, fieldRef?: React.RefObject<HTMLInputElement | null>) => {
+    setValidationToast(message);
+
+    if (fieldRef?.current) {
+      fieldRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(() => fieldRef.current?.focus(), 180);
+    }
+  };
+
   const handleSubmitOrder = async () => {
-    if (!form.ordererName.trim()) {
-      setError('주문자 이름을 입력해 주세요.');
+    const resolvedForm = {
+      ordererName: normalizeText(form.ordererName) || normalizeText(user?.nickname),
+      ordererPhone: normalizeText(form.ordererPhone) || normalizeText(profilePhone),
+      recipientName:
+        normalizeText(form.recipientName) ||
+        normalizeText(selectedAddress?.recipientName) ||
+        normalizeText(storeDefaultAddress.recipientName),
+      recipientPhone:
+        normalizeText(form.recipientPhone) ||
+        normalizeText(selectedAddress?.recipientPhone) ||
+        normalizeText(storeDefaultAddress.recipientPhone),
+      zipCode:
+        normalizeText(form.zipCode) ||
+        normalizeText(selectedAddress?.zipCode) ||
+        normalizeText(storeDefaultAddress.zipCode),
+      address1:
+        normalizeText(form.address1) ||
+        normalizeText(selectedAddress?.address1) ||
+        normalizeText(storeDefaultAddress.address1),
+      address2:
+        normalizeText(form.address2) ||
+        normalizeText(selectedAddress?.address2) ||
+        normalizeText(storeDefaultAddress.address2),
+      deliveryRequest:
+        normalizeText(form.deliveryRequest) ||
+        normalizeText(selectedAddress?.deliveryRequest) ||
+        normalizeText(storeDefaultAddress.deliveryRequest),
+    };
+
+    if (!resolvedForm.ordererName) {
+      showValidationFeedback('주문자 이름을 입력해 주세요.', ordererNameRef);
       return;
     }
 
-    if (!form.ordererPhone.trim()) {
-      setError('주문자 연락처를 입력해 주세요.');
+    if (!resolvedForm.ordererPhone) {
+      showValidationFeedback('주문자 연락처를 입력해 주세요.', ordererPhoneRef);
+      return;
+    }
+    if (!isValidPhone(resolvedForm.ordererPhone)) {
+      showValidationFeedback('올바른 주문자 연락처를 입력해 주세요.', ordererPhoneRef);
       return;
     }
 
-    if (!form.recipientName.trim()) {
-      setError('수령인 이름을 입력해 주세요.');
+    if (!resolvedForm.recipientName) {
+      showValidationFeedback('수령인 이름을 입력해 주세요.', recipientNameRef);
       return;
     }
 
-    if (!form.recipientPhone.trim()) {
-      setError('수령인 연락처를 입력해 주세요.');
+    if (!resolvedForm.recipientPhone) {
+      showValidationFeedback('수령인 연락처를 입력해 주세요.', recipientPhoneRef);
+      return;
+    }
+    if (!isValidPhone(resolvedForm.recipientPhone)) {
+      showValidationFeedback('올바른 수령인 연락처를 입력해 주세요.', recipientPhoneRef);
       return;
     }
 
-    if (!form.address1.trim()) {
-      setError('기본 주소를 입력해 주세요.');
+    if (!resolvedForm.address1) {
+      showValidationFeedback('기본 주소를 입력해 주세요.', address1Ref);
       return;
     }
 
     setIsSubmitting(true);
     setError('');
+    setValidationToast('');
 
     try {
       const response = await apiClient.post('/orders', {
-        ordererName: form.ordererName,
-        ordererPhone: form.ordererPhone,
-        recipientName: form.recipientName,
-        recipientPhone: form.recipientPhone,
-        zipCode: form.zipCode,
-        address1: form.address1,
-        address2: form.address2,
-        deliveryRequest: form.deliveryRequest,
+        ordererName: resolvedForm.ordererName,
+        ordererPhone: resolvedForm.ordererPhone,
+        recipientName: resolvedForm.recipientName,
+        recipientPhone: resolvedForm.recipientPhone,
+        zipCode: resolvedForm.zipCode,
+        address1: resolvedForm.address1,
+        address2: resolvedForm.address2,
+        deliveryRequest: resolvedForm.deliveryRequest,
         deliveryFee,
         discountAmount: 0,
         items: selectedItems.map((item) => ({
@@ -184,7 +241,7 @@ export const OrderPage = () => {
       });
 
       clearSelection();
-      navigate(`/orders/${response.data.id}`);
+      navigate(`/payment/${response.data.id}`);
     } catch (err: any) {
       setError(err.response?.data?.message || '주문 생성에 실패했습니다.');
     } finally {
@@ -195,6 +252,13 @@ export const OrderPage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
+      <ActionToast
+        open={Boolean(validationToast)}
+        badgeLabel="주문서 확인"
+        title="입력 확인이 필요합니다"
+        description={validationToast}
+        onClose={() => setValidationToast('')}
+      />
 
       <main className="container mx-auto px-4 py-10">
         <section className="mb-8 rounded-[2rem] border border-slate-200 bg-white px-8 py-8 shadow-sm">
@@ -296,6 +360,7 @@ export const OrderPage = () => {
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-700">주문자 이름</span>
                   <input
+                    ref={ordererNameRef}
                     value={form.ordererName}
                     onChange={(e) => setForm((prev) => ({ ...prev, ordererName: e.target.value }))}
                     className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
@@ -304,14 +369,17 @@ export const OrderPage = () => {
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-700">주문자 연락처</span>
                   <input
-                    value={form.ordererPhone}
-                    onChange={(e) => setForm((prev) => ({ ...prev, ordererPhone: e.target.value }))}
+                    ref={ordererPhoneRef}
+                    value={formatPhone(form.ordererPhone)}
+                    onChange={(e) => setForm((prev) => ({ ...prev, ordererPhone: formatPhone(e.target.value) }))}
                     className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
+                    maxLength={13}
                   />
                 </label>
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-700">수령인 이름</span>
                   <input
+                    ref={recipientNameRef}
                     value={form.recipientName}
                     onChange={(e) => setForm((prev) => ({ ...prev, recipientName: e.target.value }))}
                     className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
@@ -320,9 +388,11 @@ export const OrderPage = () => {
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-700">수령인 연락처</span>
                   <input
-                    value={form.recipientPhone}
-                    onChange={(e) => setForm((prev) => ({ ...prev, recipientPhone: e.target.value }))}
+                    ref={recipientPhoneRef}
+                    value={formatPhone(form.recipientPhone)}
+                    onChange={(e) => setForm((prev) => ({ ...prev, recipientPhone: formatPhone(e.target.value) }))}
                     className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
+                    maxLength={13}
                   />
                 </label>
                 <label className="space-y-2">
@@ -339,6 +409,7 @@ export const OrderPage = () => {
                 <label className="space-y-2 sm:col-span-2">
                   <span className="text-sm font-semibold text-slate-700">기본 주소</span>
                   <input
+                    ref={address1Ref}
                     value={form.address1}
                     onChange={(e) => setForm((prev) => ({ ...prev, address1: e.target.value }))}
                     className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-slate-400"
@@ -384,9 +455,14 @@ export const OrderPage = () => {
               </div>
             </div>
 
-            <Button className="mt-6 h-12 w-full text-base font-semibold" onClick={handleSubmitOrder} disabled={isSubmitting}>
+            <button
+              type="button"
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-primary px-4 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSubmitOrder}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? '주문 생성 중...' : '주문 생성 후 결제 단계로 이동'}
-            </Button>
+            </button>
           </aside>
         </section>
       </main>

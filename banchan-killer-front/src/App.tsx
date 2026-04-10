@@ -10,6 +10,7 @@ import { MyPage } from '@/pages/mypage/ui/MyPage';
 import { OrderPage } from '@/pages/order/ui/OrderPage';
 import { OrderDetailPage } from '@/pages/orders/ui/OrderDetailPage';
 import { OrdersPage } from '@/pages/orders/ui/OrdersPage';
+import { PaymentPage } from '@/pages/payment/ui/PaymentPage';
 import { SignupPage } from '@/pages/signup/ui/SignupPage';
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ function App() {
           <Route path="/order" element={<OrderPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="/payment/:orderId" element={<PaymentPage />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
