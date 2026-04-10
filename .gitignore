@@ -1,6 +1,8 @@
 # Root workspace artifacts
 node_modules/
 .DS_Store
+.env
+.env.*
 
 # Editor / local tool state
 .idea/

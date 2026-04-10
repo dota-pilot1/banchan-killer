@@ -62,6 +62,11 @@ export const Header = () => {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
+              {isAuthenticated && (
+                <Link to="/admin/products" className="text-sm font-semibold text-slate-500 transition-colors hover:text-primary">
+                  상품 관리
+                </Link>
+              )}
               <span className="text-sm font-medium">{user?.nickname || user?.email}님</span>
               <Button variant="outline" size="sm" onClick={logout}>로그아웃</Button>
             </div>

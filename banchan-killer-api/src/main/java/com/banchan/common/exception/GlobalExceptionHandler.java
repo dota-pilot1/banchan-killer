@@ -30,6 +30,12 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(401, e.getMessage()));
     }
 
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ErrorResponse> handleFileUpload(FileUploadException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(400, e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()

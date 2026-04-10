@@ -28,7 +28,11 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/products", "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                .requestMatchers("/api/uploads/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger 허용
                 .anyRequest().authenticated()
