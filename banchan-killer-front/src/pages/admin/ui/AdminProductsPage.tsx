@@ -75,6 +75,7 @@ export const AdminProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [form, setForm] = useState<ProductFormState>(initialFormState);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -108,10 +109,18 @@ export const AdminProductsPage = () => {
   const resetForm = () => {
     setForm(initialFormState);
     setEditingId(null);
+    setIsFormOpen(false);
   };
 
   const handleChange = (field: keyof ProductFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreate = () => {
+    setForm(initialFormState);
+    setEditingId(null);
+    setError('');
+    setIsFormOpen(true);
   };
 
   const handleEdit = (product: Product) => {
@@ -124,7 +133,8 @@ export const AdminProductsPage = () => {
       category: product.category,
       imageUrl: product.imageUrl ?? '',
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setError('');
+    setIsFormOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -165,8 +175,8 @@ export const AdminProductsPage = () => {
         await apiClient.post('/products', payload);
       }
 
-      resetForm();
       await loadProducts();
+      resetForm();
     } catch (err: any) {
       setError(err.response?.data?.message || '상품 저장에 실패했습니다.');
     } finally {
@@ -178,8 +188,8 @@ export const AdminProductsPage = () => {
     <div className="min-h-screen bg-slate-50">
       <Header />
 
-      <main className="container mx-auto px-4 py-10">
-        <section className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <main className="mx-auto w-full max-w-[1840px] px-3 py-6 lg:px-4">
+        <section className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_440px]">
           <aside className="rounded-3xl bg-white p-5 shadow-sm border border-slate-100 h-fit">
             <div className="mb-6 px-2">
               <p className="text-sm font-semibold text-orange-600">Admin Console</p>
@@ -228,13 +238,13 @@ export const AdminProductsPage = () => {
             </nav>
           </aside>
 
-          <div className="space-y-8">
-            <section className="rounded-3xl bg-white p-8 shadow-sm border border-slate-100">
+          <div className="space-y-5">
+            <section className="rounded-3xl bg-white px-8 py-6 shadow-sm border border-slate-100">
               <div className="flex items-start justify-between gap-6">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-orange-600">현재 메뉴</p>
-                  <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">상품 관리</h2>
-                  <p className="text-slate-600">
+                  <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">상품 관리</h2>
+                  <p className="max-w-3xl text-sm leading-6 text-slate-600">
                     반찬 상품을 등록하고, 가격과 재고를 수정하고, 불필요한 상품을 정리할 수 있습니다.
                   </p>
                 </div>
@@ -244,117 +254,29 @@ export const AdminProductsPage = () => {
               </div>
             </section>
 
-            <section className="grid gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
-              <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-                <div className="mb-6 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-900">{editingId ? '상품 수정' : '새 상품 등록'}</h3>
-                    <p className="mt-1 text-sm text-slate-500">기본 정보만 입력해도 바로 목록에 반영됩니다.</p>
-                  </div>
-                  {editingId && (
-                    <button type="button" onClick={resetForm} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
-                      새로 입력
-                    </button>
-                  )}
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">상품명</span>
-                    <input
-                      value={form.name}
-                      onChange={(e) => handleChange('name', e.target.value)}
-                      required
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="예: 꽈리고추 볶음"
-                    />
-                  </label>
-
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">설명</span>
-                    <textarea
-                      value={form.description}
-                      onChange={(e) => handleChange('description', e.target.value)}
-                      required
-                      rows={4}
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="상품 설명을 입력하세요"
-                    />
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-700">가격</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.price}
-                        onChange={(e) => handleChange('price', e.target.value)}
-                        required
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                    </label>
-
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-700">재고</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.stockQuantity}
-                        onChange={(e) => handleChange('stockQuantity', e.target.value)}
-                        required
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">카테고리</span>
-                    <select
-                      value={form.category}
-                      onChange={(e) => handleChange('category', e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                      {categoryOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">이미지 URL</span>
-                    <input
-                      value={form.imageUrl}
-                      onChange={(e) => handleChange('imageUrl', e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="https://..."
-                    />
-                  </label>
-
-                  {error && (
-                    <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                      {error}
-                    </div>
-                  )}
-
-                  <Button type="submit" className="w-full h-12 text-base font-bold" disabled={isSubmitting}>
-                    {isSubmitting ? '저장 중...' : editingId ? '상품 수정하기' : '상품 등록하기'}
-                  </Button>
-                </form>
-              </div>
-
-              <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-                <div className="mb-6">
+            <section className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <div>
                   <h3 className="text-2xl font-bold text-slate-900">등록된 상품</h3>
                   <p className="mt-1 text-sm text-slate-500">현재 등록된 반찬 상품을 확인하고 수정할 수 있습니다.</p>
                 </div>
+                <Button type="button" className="h-11 px-5 text-sm font-semibold" onClick={handleCreate}>
+                  새 상품 등록
+                </Button>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                카드의 `수정` 버튼을 누르면 오른쪽 편집 패널에서 바로 수정할 수 있습니다.
+              </div>
+
+              <div className="mt-5">
+                <div className="mb-6">
+                </div>
 
                 {isLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-44 animate-pulse rounded-3xl bg-slate-100" />
                     ))}
                   </div>
                 ) : products.length === 0 ? (
@@ -362,36 +284,58 @@ export const AdminProductsPage = () => {
                     아직 등록된 상품이 없습니다.
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid gap-4 md:grid-cols-2">
                     {products.map((product) => (
-                      <div key={product.id} className="flex items-start justify-between gap-4 rounded-2xl border border-slate-100 p-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
-                              {categoryOptions.find((option) => option.value === product.category)?.label ?? product.category}
-                            </span>
-                            <span className="text-xs text-slate-400">재고 {product.stockQuantity}개</span>
+                      <div
+                        key={product.id}
+                        className={`rounded-3xl border p-5 transition-all ${
+                          editingId === product.id
+                            ? 'border-orange-200 bg-orange-50/60 shadow-sm'
+                            : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+                                {categoryOptions.find((option) => option.value === product.category)?.label ?? product.category}
+                              </span>
+                              <span className="text-xs font-medium text-slate-400">재고 {product.stockQuantity}개</span>
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-slate-900">{product.name}</h3>
+                              <p className="mt-2 text-sm leading-6 text-slate-500 line-clamp-3">{product.description}</p>
+                            </div>
                           </div>
-                          <h3 className="text-lg font-bold text-slate-900">{product.name}</h3>
-                          <p className="text-sm text-slate-500 line-clamp-2">{product.description}</p>
-                          <p className="text-sm font-semibold text-slate-700">{product.price.toLocaleString()}원</p>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(product)}
+                              className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                            >
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(product.id)}
+                              className="rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(product)}
-                            className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                          >
-                            수정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(product.id)}
-                            className="rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"
-                          >
-                            삭제
-                          </button>
+                        <div className="mt-5 flex items-end justify-between gap-4 border-t border-slate-100 pt-4">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-slate-400">판매가</p>
+                            <p className="text-2xl font-extrabold text-slate-900">{product.price.toLocaleString()}원</p>
+                          </div>
+                          {editingId === product.id && (
+                            <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+                              현재 수정 중
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -400,6 +344,155 @@ export const AdminProductsPage = () => {
               </div>
             </section>
           </div>
+          <aside className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden h-fit xl:sticky xl:top-24">
+            <div className="border-b border-slate-100 px-6 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-orange-600">{editingId ? '현재 선택 상품' : '새 상품'}</p>
+                  <h3 className="mt-1 text-2xl font-bold text-slate-900">{editingId ? '상품 수정' : '새 상품 등록'}</h3>
+                  <p className="mt-2 text-sm text-slate-500">오른쪽 패널에서 상품 정보를 수정하고 저장할 수 있습니다.</p>
+                </div>
+                {isFormOpen && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200"
+                  >
+                    닫기
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {isFormOpen ? (
+              <>
+                <div className="px-6 py-5">
+                  <div className="overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
+                    {form.imageUrl ? (
+                      <img
+                        src={form.imageUrl}
+                        alt={form.name || '상품 이미지 미리보기'}
+                        className="h-56 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center bg-slate-100 text-sm font-medium text-slate-400">
+                        이미지 미리보기
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-6 pb-6">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">상품명</span>
+                      <input
+                        value={form.name}
+                        onChange={(e) => handleChange('name', e.target.value)}
+                        required
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="예: 꽈리고추 볶음"
+                      />
+                    </label>
+
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">설명</span>
+                      <textarea
+                        value={form.description}
+                        onChange={(e) => handleChange('description', e.target.value)}
+                        required
+                        rows={4}
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="상품 설명을 입력하세요"
+                      />
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-slate-700">가격</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={form.price}
+                          onChange={(e) => handleChange('price', e.target.value)}
+                          required
+                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </label>
+
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-slate-700">재고</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={form.stockQuantity}
+                          onChange={(e) => handleChange('stockQuantity', e.target.value)}
+                          required
+                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">카테고리</span>
+                      <select
+                        value={form.category}
+                        onChange={(e) => handleChange('category', e.target.value)}
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {categoryOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">이미지 URL</span>
+                      <input
+                        value={form.imageUrl}
+                        onChange={(e) => handleChange('imageUrl', e.target.value)}
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="https://..."
+                      />
+                    </label>
+
+                    {error && (
+                      <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3 pt-2">
+                      <Button type="submit" className="h-12 flex-1 text-base font-bold" disabled={isSubmitting}>
+                        {isSubmitting ? '저장 중...' : editingId ? '상품 수정하기' : '상품 등록하기'}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="px-6 py-10">
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
+                  <h4 className="text-xl font-bold text-slate-900">편집할 상품을 선택하세요</h4>
+                  <p className="mt-3 text-sm leading-6 text-slate-500">
+                    상품 카드의 `수정` 버튼을 누르거나, `새 상품 등록`을 눌러 오른쪽 패널에서 작업을 시작할 수 있습니다.
+                  </p>
+                  <Button type="button" className="mt-5 h-11 px-5 text-sm font-semibold" onClick={handleCreate}>
+                    새 상품 등록
+                  </Button>
+                </div>
+              </div>
+            )}
+          </aside>
         </section>
       </main>
     </div>
