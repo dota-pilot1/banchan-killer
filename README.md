@@ -15,46 +15,36 @@
 
 ## 실행 전 준비
 
-- 백엔드 환경변수 파일은 [banchan-killer-api/.env](/Users/terecal/banchan-killer-container/banchan-killer-api/.env) 위치에 둡니다.
-- `.env` 파일은 git에 포함되지 않도록 [banchan-killer-api/.gitignore](/Users/terecal/banchan-killer-container/banchan-killer-api/.gitignore)에 추가되어 있습니다.
-- Spring Boot는 `spring.config.import=optional:file:.env[.properties]` 설정으로 실행 시 `.env` 값을 읽습니다.
-- 프론트에서 API 주소나 Toss 결제 키를 바꾸려면 `banchan-killer-front/.env` 또는 `.env.local`에 Vite 환경변수를 둡니다.
+### 1. 백엔드용 `.env` 파일 만들기
 
-## 백엔드 .env 가이드
+루트가 아니라 [banchan-killer-api/.env](/Users/terecal/banchan-killer-container/banchan-killer-api/.env) 경로에 `.env` 파일을 만들어야 합니다.
 
-아래 값들은 백엔드에서 사용할 수 있는 환경변수입니다.
+- 위치: `banchan-killer-api/.env`
+- 이 파일은 git에 포함되지 않도록 [banchan-killer-api/.gitignore](/Users/terecal/banchan-killer-container/banchan-killer-api/.gitignore)에 추가되어 있습니다.
+- Spring Boot는 `spring.config.import=optional:file:.env[.properties]` 설정으로 실행 시 이 파일을 읽습니다.
 
-### 기본 실행용
+#### 백엔드 `.env`에 넣을 값
+
+필수
 
 - `SPRING_DATASOURCE_URL`: PostgreSQL DB 접속 URL
 - `SPRING_DATASOURCE_USERNAME`: DB 계정
 - `SPRING_DATASOURCE_PASSWORD`: DB 비밀번호
-- `SPRING_JPA_HIBERNATE_DDL_AUTO`: 현재 프로젝트 기본값은 `update`
 - `JWT_SECRET`: 로그인/인증 토큰 서명 키
+
+선택
+
+- `SPRING_JPA_HIBERNATE_DDL_AUTO`: 현재 프로젝트 기본값은 `update`
 - `JWT_ACCESS_TOKEN_VALIDITY_IN_SECONDS`: 액세스 토큰 만료 시간(초 단위), 기본값 `86400`
-
-설명:
-
-- 로컬 기본 DB 설정은 PostgreSQL 기준이다.
-- `ddl-auto`는 이 프로젝트에서는 `update`를 유지하는 것이 기본이다.
-- `JWT_SECRET`는 최소 32바이트 이상 길게 잡는 것이 안전하다.
-
-### S3 이미지 업로드용
 
 - `AWS_ACCESS_KEY_ID`: AWS 액세스 키
 - `AWS_SECRET_ACCESS_KEY`: AWS 시크릿 키
 - `AWS_REGION` 또는 `AWS_S3_REGION`: S3 리전
 - `S3_BUCKET_NAME`: 상품 이미지 업로드 대상 버킷명
 
-상품 관리 화면에서 이미지 업로드 기능을 쓰려면 S3 관련 값이 필요합니다. 이 값이 없으면 상품 등록/수정 자체는 가능해도 파일 업로드 기능은 정상 동작하지 않을 수 있습니다.
-
-### 결제 연동용
-
 - `TOSS_SECRET_KEY`: 백엔드에서 Toss 승인 API 호출 시 사용하는 시크릿 키
 
-현재 주문/결제 흐름을 확장할 때 서버 측 결제 승인 검증용으로 사용합니다.
-
-### 기타 외부 연동용
+현재 반찬몰 핵심 기능에서는 미사용 또는 비필수
 
 - `OPENAI_API_KEY`
 - `GEMINI_API_KEY`
@@ -63,19 +53,9 @@
 - `AZURE_SPEECH_REGION`
 - `OAUTH2_REDIRECT_BASE_URL`
 
-위 값들은 현재 반찬몰 핵심 상품 관리 기능에 직접 필수는 아닐 수 있지만, 백엔드에서 다른 기능이나 공용 설정으로 참조한다면 함께 관리해야 합니다.
+위 값들은 현재 상품, 장바구니, 주문서, 주문 생성 흐름에는 직접 필요하지 않습니다. 다른 실험 기능이나 외부 연동을 붙일 때만 별도로 관리하면 됩니다.
 
-## 프론트 .env 가이드
-
-### 기본 실행용
-
-- `VITE_API_BASE_URL`: 프론트가 호출할 API 기본 주소, 기본값은 `/api`
-
-### 결제 연동용
-
-- `VITE_TOSS_CLIENT_KEY`: Toss 결제창 호출용 클라이언트 키
-
-## .env 예시
+#### 백엔드 `.env` 예시
 
 ```env
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/mydatabase
@@ -99,6 +79,23 @@ AZURE_SPEECH_KEY=your_azure_speech_key
 AZURE_SPEECH_REGION=koreacentral
 OAUTH2_REDIRECT_BASE_URL=https://your-domain.example.com
 ```
+
+설명:
+
+- 로컬 기본 DB 설정은 PostgreSQL 기준이다.
+- `ddl-auto`는 이 프로젝트에서는 `update`를 유지하는 것이 기본이다.
+- `JWT_SECRET`는 최소 32바이트 이상 길게 잡는 것이 안전하다.
+
+### 2. 프론트용 `.env.local` 파일 만들기
+
+프론트에서 API 주소나 Toss 결제 키를 바꾸려면 `banchan-killer-front/.env.local`에 Vite 환경변수를 둡니다.
+
+#### 프론트 `.env.local`에 넣을 값
+
+- `VITE_API_BASE_URL`: 프론트가 호출할 API 기본 주소, 기본값은 `/api`
+- `VITE_TOSS_CLIENT_KEY`: Toss 결제창 호출용 클라이언트 키
+
+#### 프론트 `.env.local` 예시
 
 ```env
 # banchan-killer-front/.env.local
